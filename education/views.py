@@ -4,7 +4,7 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.permissions import IsAuthenticated
 
 from education.models import Course, Lesson, Payment
-from education.permissions import IsMember, IsModerator
+from education.permissions import IsMember, IsModerator, IsOwner
 from education.serializers import CourseSerializer, LessonSerializer, PaymentSerializer
 from users.models import UserRole
 
@@ -16,8 +16,12 @@ class CourseViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['create', 'destroy']:
             permission_classes = [IsAuthenticated, IsMember]
+        elif self.action in ['list', 'retrieve']:
+            permission_classes = [IsAuthenticated, IsModerator | IsOwner]
         else:
-            permission_classes = [IsAuthenticated, IsModerator]
+            permission_classes = [IsAuthenticated, IsOwner]
+
+        return [permission() for permission in permission_classes]
 
     def get_queryset(self):
         user = self.request.user
@@ -59,12 +63,12 @@ class LessonRetrieveAPIView(generics.RetrieveAPIView):
 class LessonUpdateAPIView(generics.UpdateAPIView):
     serializer_class = LessonSerializer
     queryset = Lesson.objects.all()
-    permission_classes = [IsAuthenticated, IsModerator]
+    permission_classes = [IsAuthenticated, IsOwner]
 
 
 class LessonDestroyAPIView(generics.DestroyAPIView):
     queryset = Lesson.objects.all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwner]
 
 
 class PaymentListAPIView(generics.ListAPIView):
