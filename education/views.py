@@ -1,17 +1,19 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, generics
 from rest_framework.filters import OrderingFilter
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
-from education.models import Course, Lesson, Payment
+from education.models import Course, Lesson, Payment, Subscription
+from education.paginators import CoursePaginator, LessonPaginator
 from education.permissions import IsMember, IsModerator, IsOwner
-from education.serializers import CourseSerializer, LessonSerializer, PaymentSerializer
+from education.serializers import CourseSerializer, LessonSerializer, PaymentSerializer, SubscriptionSerializer
 from users.models import UserRole
 
 
 class CourseViewSet(viewsets.ModelViewSet):
     serializer_class = CourseSerializer
     queryset = Course.objects.all()
+    pagination_class = CoursePaginator
 
     def get_permissions(self):
         if self.action in ['create', 'destroy']:
@@ -30,6 +32,11 @@ class CourseViewSet(viewsets.ModelViewSet):
         else:
             return Course.objects.filter(user=user)
 
+    def perform_create(self, serializer):
+        new_course = serializer.save()
+        new_course.user = self.request.user
+        new_course.save()
+
 
 class LessonCreateAPIView(generics.CreateAPIView):
     serializer_class = LessonSerializer
@@ -45,6 +52,7 @@ class LessonListAPIView(generics.ListAPIView):
     serializer_class = LessonSerializer
     queryset = Lesson.objects.all()
     permission_classes = [IsAuthenticated]
+    pagination_class = LessonPaginator
 
     def get_queryset(self):
         user = self.request.user
@@ -57,7 +65,7 @@ class LessonListAPIView(generics.ListAPIView):
 class LessonRetrieveAPIView(generics.RetrieveAPIView):
     serializer_class = LessonSerializer
     queryset = Lesson.objects.all()
-    permission_classes = [IsAuthenticated, IsModerator]
+    permission_classes = [IsAuthenticated, IsModerator | IsOwner]
 
 
 class LessonUpdateAPIView(generics.UpdateAPIView):
@@ -77,7 +85,7 @@ class PaymentListAPIView(generics.ListAPIView):
 
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = ('course', 'lesson', 'method',)
-    ordering_fields = ('date')
+    ordering_fields = ('-date')
 
 
 class PaymentCreateAPIView(generics.CreateAPIView):
@@ -87,3 +95,18 @@ class PaymentCreateAPIView(generics.CreateAPIView):
 class PaymentRetrieveAPIView(generics.RetrieveAPIView):
     serializer_class = PaymentSerializer
     queryset = Payment.objects.all()
+
+
+class SubscriptionCreateAPIView(generics.CreateAPIView):
+    serializer_class = SubscriptionSerializer
+    permission_classes = [IsAuthenticated, IsMember]
+
+    def perform_create(self, serializer):
+        new_subscription = serializer.save()
+        new_subscription.user = self.request.user
+        new_subscription.save()
+
+
+class SubscriptionDestroyAPIView(generics.DestroyAPIView):
+    queryset = Subscription.objects.all()
+    permission_classes = [IsAuthenticated, IsOwner]

@@ -1,9 +1,11 @@
 from django.urls import path
+
 from rest_framework.routers import DefaultRouter
 
 from education.apps import EducationConfig
 from education.views import CourseViewSet, LessonCreateAPIView, LessonListAPIView, LessonRetrieveAPIView, \
-    LessonUpdateAPIView, LessonDestroyAPIView, PaymentListAPIView, PaymentCreateAPIView
+    LessonUpdateAPIView, LessonDestroyAPIView, PaymentListAPIView, PaymentCreateAPIView, SubscriptionCreateAPIView, \
+    SubscriptionDestroyAPIView
 
 app_name = EducationConfig.name
 
@@ -12,12 +14,16 @@ router = DefaultRouter()
 router.register(r'course', CourseViewSet, basename='course')
 
 urlpatterns = [
-    path('lesson/create/', LessonCreateAPIView.as_view(), name='lesson-create'),
-    path('lesson/', LessonListAPIView.as_view(), name='lesson-list'),
-    path('lesson/<int:pk>/', LessonRetrieveAPIView.as_view(), name='lesson-retrieve'),
-    path('lesson/update/<int:pk>/', LessonUpdateAPIView.as_view(), name='lesson-update'),
-    path('lesson/delete/<int:pk>/', LessonDestroyAPIView.as_view(), name='lesson-delete'),
+    path('lesson/create/', LessonCreateAPIView.as_view(), name='lesson_create'),
+    path('lesson/', LessonListAPIView.as_view(), name='lesson_list'),
+    path('lesson/<int:pk>/', LessonRetrieveAPIView.as_view(), name='lesson_retrieve'),
+    path('lesson/update/<int:pk>/', LessonUpdateAPIView.as_view(), name='lesson_update'),
+    path('lesson/delete/<int:pk>/', LessonDestroyAPIView.as_view(), name='lesson_delete'),
 
-    path('payment/', PaymentListAPIView.as_view(), name='payment-list'),
-    path('payment/create/', PaymentCreateAPIView.as_view(), name='payment-create'),
+    path('payment/', PaymentListAPIView.as_view(), name='payment_list'),
+    path('payment/create/', PaymentCreateAPIView.as_view(), name='payment_create'),
+
+
+    path('subscription/create/', SubscriptionCreateAPIView.as_view(), name='subscription_create'),
+    path('subscription/delete/<int:pk>/', SubscriptionDestroyAPIView.as_view(), name='subscription_delete'),
 ] + router.urls
