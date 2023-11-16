@@ -8,6 +8,7 @@ class Course(models.Model):
     title = models.CharField(max_length=100, verbose_name='Название курса')
     preview = models.ImageField(upload_to='course/', verbose_name='Изображение', null=True, blank=True)
     description = models.TextField(verbose_name='Описание курса', null=True, blank=True)
+    amount = models.IntegerField(default=100, verbose_name='Цена')
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
 
@@ -45,6 +46,7 @@ class Payment(models.Model):
     date = models.DateField(auto_now_add=True, verbose_name='дата')
     price = models.IntegerField(verbose_name='Цена', null=True, blank=True)
     method = models.CharField(max_length=10, choices=PAY_METHOD_CHOICE, default='Card', verbose_name='Способ оплаты')
+    stripe_id = models.TextField(verbose_name='ID платежа', null=True, blank=True)
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
     course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True, blank=True)

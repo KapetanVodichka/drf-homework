@@ -1,8 +1,10 @@
+import stripe
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, generics
 from rest_framework.filters import OrderingFilter
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
+from config import settings
 from education.models import Course, Lesson, Payment, Subscription
 from education.paginators import CoursePaginator, LessonPaginator
 from education.permissions import IsMember, IsModerator, IsOwner
@@ -87,14 +89,38 @@ class PaymentListAPIView(generics.ListAPIView):
     filterset_fields = ('course', 'lesson', 'method',)
     ordering_fields = ('-date')
 
+    def get_queryset(self):
+        user = self.request.user
+        if user.role == UserRole.Moderator:
+            return Payment.objects.all()
+        else:
+            return Payment.objects.filter(user=user)
+
 
 class PaymentCreateAPIView(generics.CreateAPIView):
     serializer_class = PaymentSerializer
+    permission_classes = [IsAuthenticated, IsMember]
+
+    def perform_create(self, serializer):
+        new_pay = serializer.save()
+
+        stripe.api_key = settings.PAY_API_KEY
+        stripe_pay = stripe.PaymentIntent.create(
+            amount=serializer.validated_data['course'].amount,
+            currency="usd",
+            automatic_payment_methods={"enabled": True},
+        )
+
+        new_pay.user = self.request.user
+        new_pay.price = serializer.validated_data['course'].amount
+        new_pay.stripe_id = stripe_pay["id"]
+        new_pay.save()
 
 
 class PaymentRetrieveAPIView(generics.RetrieveAPIView):
     serializer_class = PaymentSerializer
     queryset = Payment.objects.all()
+    permission_classes = [IsAuthenticated, IsModerator | IsOwner]
 
 
 class SubscriptionCreateAPIView(generics.CreateAPIView):

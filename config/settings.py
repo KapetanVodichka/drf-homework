@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'rest_framework_simplejwt',
+    'drf_yasg',
 
     'users',
     'education',
@@ -145,3 +146,5 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ]
 }
+
+PAY_API_KEY = 'sk_test_51NxDJqDLwcpdlOQT8uwljcHQdCpR92rSjQvt0GKExTcNKMVspaX1JLQnxsHoJwfDA7so3EZ0SrerYWJXGRJJSMu800E3Iyl7I4'

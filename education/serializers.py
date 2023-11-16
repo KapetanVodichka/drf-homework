@@ -1,5 +1,7 @@
+import stripe
 from rest_framework import serializers
 
+from config import settings
 from education.models import Lesson, Course, Payment, Subscription
 from education.validators import LinkValidator
 
@@ -37,8 +39,28 @@ class PaymentSerializer(serializers.ModelSerializer):
         model = Payment
         fields = '__all__'
 
+    def validate(self, data):
+        if not data.get('course'):
+            raise serializers.ValidationError("Выберите курс.")
+        return data
+
 
 class SubscriptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subscription
         fields = ('course', 'status')
+
+
+class PaymentStripeSerializer(PaymentSerializer):
+    stripe = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Payment
+        fields = '__all__'
+
+    def get_stripe(self, instance):
+        stripe.api_key = settings.PAY_API_KEY
+        stripe_data = stripe.PaymentIntent.retrieve(
+            instance.stripe_id,
+        )
+        return stripe_data
