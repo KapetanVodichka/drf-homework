@@ -39,6 +39,15 @@ class CourseViewSet(viewsets.ModelViewSet):
         new_course.user = self.request.user
         new_course.save()
 
+    def perform_update(self, serializer):
+        updated_course = serializer.save()
+        check_update.delay(
+            updated_course.pk,
+            updated_course.title,
+            updated_course.user.email,
+            updated_course.user.pk
+        )
+
 
 class LessonCreateAPIView(generics.CreateAPIView):
     serializer_class = LessonSerializer

@@ -17,6 +17,8 @@ class User(AbstractUser):
     city = models.CharField(max_length=50, verbose_name='Город', blank=True, null=True)
 
     role = models.CharField(max_length=9, choices=UserRole.choices, default=UserRole.Member, verbose_name='роль')
+    is_staff = models.BooleanField(default=False)
+    is_superuser = models.BooleanField(default=False)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
